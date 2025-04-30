@@ -1,28 +1,29 @@
-let font;
-let points = [];
 let mic, fft;
+let points = [];
+let font;
 let smoothedSize = 10;
 
 function preload() {
-  font = loadFont("Fonts/Roboto-VariableFont.ttf");
+  font = loadFont("Fonts/Roboto-VariableFont.ttf"); // Assure-toi que le chemin est correct
 }
 
 function setup() {
   createCanvas(800, 800);
-
   mic = new p5.AudioIn();
 
+  // Ajout d'un bouton pour démarrer le micro
   let button = createButton("Activer le micro");
   button.position(20, 20);
   button.style("font-size", "18px");
   button.mousePressed(() => {
-    mic.start();
-    button.hide();
+    mic.start(() => {
+      fft = new p5.FFT();
+      fft.setInput(mic);
+      button.hide(); // Cacher le bouton une fois cliqué
+    });
   });
-
-  fft = new p5.FFT();
-  fft.setInput(mic);
-
+  
+  // Préparer le texte à afficher
   points = font.textToPoints("A", 300, 580, 350, {
     sampleFactor: 0.1,
   });
@@ -33,6 +34,16 @@ function setup() {
 function draw() {
   background(0);
 
+  if (!fft) {
+    // Afficher un message tant que le micro n'est pas démarré
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    text("Cliquez pour activer le micro", width / 2, height / 2);
+    return;
+  }
+
+  // Calcul du spectre et des animations basées sur l'audio
   let spectrum = fft.analyze();
   let freq = getDominantFreq(spectrum);
 
